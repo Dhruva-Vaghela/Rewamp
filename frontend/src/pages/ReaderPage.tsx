@@ -1,5 +1,12 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
+
+// Chat Icon
+const MessageSquare = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+)
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -70,7 +77,21 @@ export default function ReaderPage() {
   // Fit-to-viewport width scale
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined)
 
+  const [searchParams] = useSearchParams()
+  const pageParam = searchParams.get('page')
+
   const safeBookId = bookId ? decodeURIComponent(bookId) : ''
+
+  // Jump to page specified in query param once document loads
+  useEffect(() => {
+    if (pageParam && numPages > 0) {
+      const targetPage = parseInt(pageParam, 10)
+      if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= numPages) {
+        setCurrentPage(targetPage)
+        setPageInputValue(String(targetPage))
+      }
+    }
+  }, [pageParam, numPages])
 
   // Fetch book metadata
   useEffect(() => {
@@ -275,6 +296,19 @@ export default function ReaderPage() {
           >
             <FitWidth />
           </button>
+
+          {safeBookId && (
+            <Link
+              to={`/chat/${encodeURIComponent(safeBookId)}`}
+              className="btn btn-primary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 8, padding: '6px 14px', fontSize: 13 }}
+              id="reader-chat-btn"
+              title="Ask questions about this book using AI"
+            >
+              <MessageSquare />
+              <span>Chat</span>
+            </Link>
+          )}
         </div>
       </header>
 

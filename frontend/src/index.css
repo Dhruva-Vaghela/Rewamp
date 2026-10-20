@@ -1058,7 +1058,8 @@ h3 {
 /* ============================================================
    LIBRARY PAGE
    ============================================================ */
-.library-page {
+.library-page,
+.chat-page {
   min-height: 100vh;
   padding-top: 64px;
   background: var(--bg-primary);

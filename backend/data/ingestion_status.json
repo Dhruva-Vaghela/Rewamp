@@ -1,0 +1,83 @@
+{
+  "alice-s-adventures-in-wonderland-lewis-carroll-9898": {
+    "book_id": "alice-s-adventures-in-wonderland-lewis-carroll-9898",
+    "title": "Alice's Adventures in Wonderland",
+    "status": "ready",
+    "chunk_count": 75,
+    "file_hash": "ad172c7da75de6f57a897c4ed6b264eb5794c8fa0aff05ad6d07bd8ab520e589",
+    "error": null,
+    "updated_at": "2026-10-20T15:29:53.514786+00:00"
+  },
+  "frankenstein-mary-shelley": {
+    "book_id": "frankenstein-mary-shelley",
+    "title": "Frankenstein",
+    "status": "ready",
+    "chunk_count": 356,
+    "file_hash": "bd73dc9e56e2bcab0c18ef51f451eb4018618cccf6cb1e6b654a0b55f37d87a5",
+    "error": null,
+    "updated_at": "2026-10-20T15:30:50.198603+00:00"
+  },
+  "phantastes-george-macdonald-9895": {
+    "book_id": "phantastes-george-macdonald-9895",
+    "title": "Phantastes",
+    "status": "ready",
+    "chunk_count": 228,
+    "file_hash": "6dd9813ab1027fb8e3dea4652566b84a10bf21351d0b399bfea56c3390130e27",
+    "error": null,
+    "updated_at": "2026-10-20T15:31:27.688117+00:00"
+  },
+  "pride-and-prejudice-jane-austen": {
+    "book_id": "pride-and-prejudice-jane-austen",
+    "title": "Pride and Prejudice",
+    "status": "ready",
+    "chunk_count": 570,
+    "file_hash": "b90bdddcb5ac57b4d706d2d6b1a6577d41c324e72b3fc44d61e2e6dfc91c317a",
+    "error": null,
+    "updated_at": "2026-10-20T15:32:54.072025+00:00"
+  },
+  "the-adventures-of-sherlock-holmes-arthur-conan-doyle-9924": {
+    "book_id": "the-adventures-of-sherlock-holmes-arthur-conan-doyle-9924",
+    "title": "The Adventures of Sherlock Holmes",
+    "status": "ready",
+    "chunk_count": 315,
+    "file_hash": "4bc05f7d71e7749c7921d5cdee4e0e5887083a117a529be787d32f395e861736",
+    "error": null,
+    "updated_at": "2026-10-20T15:33:45.550472+00:00"
+  },
+  "the-great-gatsby-f-scott-fitzgerald": {
+    "book_id": "the-great-gatsby-f-scott-fitzgerald",
+    "title": "The Great Gatsby",
+    "status": "ready",
+    "chunk_count": 213,
+    "file_hash": "532679f617ffb4de6b209e6f3c904f4bb85ef215f8013cb3f859a082f3eeacf3",
+    "error": null,
+    "updated_at": "2026-10-20T15:34:20.222261+00:00"
+  },
+  "the-mill-on-the-floss-george-eliot-9931": {
+    "book_id": "the-mill-on-the-floss-george-eliot-9931",
+    "title": "The Mill on the Floss",
+    "status": "ready",
+    "chunk_count": 677,
+    "file_hash": "20a2523bf8bdcae82cf12685954f693a0f49a3a8dab66886cc449dfece172dca",
+    "error": null,
+    "updated_at": "2026-10-20T15:36:07.444558+00:00"
+  },
+  "the-three-musketeers-alexandre-dumas-9929": {
+    "book_id": "the-three-musketeers-alexandre-dumas-9929",
+    "title": "The Three Musketeers",
+    "status": "ready",
+    "chunk_count": 679,
+    "file_hash": "5b002c14acc96a950648275611f45a33ffd1c4be4472d7fa9de45302c8127793",
+    "error": null,
+    "updated_at": null
+  },
+  "alice-s-adventures-in-wonderland-lewis-carroll": {
+    "book_id": "alice-s-adventures-in-wonderland-lewis-carroll",
+    "title": "Alice's Adventures in Wonderland",
+    "status": "ready",
+    "chunk_count": 75,
+    "file_hash": "ad172c7da75de6f57a897c4ed6b264eb5794c8fa0aff05ad6d07bd8ab520e589",
+    "error": null,
+    "updated_at": "2026-10-20T15:21:47.940331+00:00"
+  }
+}

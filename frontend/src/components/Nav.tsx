@@ -69,6 +69,14 @@ export default function Nav() {
             </Link>
           </li>
           <li>
+            <Link
+              to="/chat"
+              className={`nav-link ${location.pathname.startsWith('/chat') ? 'active' : ''}`}
+            >
+              AI Chat
+            </Link>
+          </li>
+          <li>
             <a href="/#features" className="nav-link">
               Features
             </a>
