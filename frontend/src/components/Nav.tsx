@@ -15,13 +15,6 @@ const MoonIcon = () => (
   </svg>
 )
 
-const SystemIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="3" width="20" height="14" rx="2"/>
-    <path d="M8 21h8M12 17v4"/>
-  </svg>
-)
-
 const BookIcon = () => (
   <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="32" height="32" rx="8" fill="var(--accent-gold)" fillOpacity="0.12"/>
@@ -31,22 +24,15 @@ const BookIcon = () => (
   </svg>
 )
 
-const THEME_CYCLE: Theme[] = ['dark', 'light', 'system']
-
 export default function Nav() {
-  const { theme, resolvedTheme, setTheme } = useTheme()
+  const { resolvedTheme, toggleTheme } = useTheme()
   const location = useLocation()
 
   const isActive = (path: string) => location.pathname === path
 
-  const cycleTheme = () => {
-    const idx = THEME_CYCLE.indexOf(theme)
-    const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length]
-    setTheme(next)
-  }
-
-  const ThemeIcon = theme === 'dark' ? MoonIcon : theme === 'light' ? SunIcon : SystemIcon
-  const themeLabel = theme === 'dark' ? 'Dark mode' : theme === 'light' ? 'Light mode' : 'System mode'
+  const ThemeIcon = resolvedTheme === 'dark' ? MoonIcon : SunIcon
+  const themeLabel = resolvedTheme === 'dark' ? 'Dark mode' : 'Light mode'
+  const nextThemeLabel = resolvedTheme === 'dark' ? 'light mode' : 'dark mode'
 
   return (
     <nav className="nav" role="navigation" aria-label="Main navigation">
@@ -58,7 +44,7 @@ export default function Nav() {
         </Link>
 
 
-        {/* Desktop nav links */}
+        {/* Simplified Fantasy Navigation links: Library and AI Chat only */}
         <ul className="nav-links" role="list">
           <li>
             <Link
@@ -76,32 +62,19 @@ export default function Nav() {
               AI Chat
             </Link>
           </li>
-          <li>
-            <a href="/#features" className="nav-link">
-              Features
-            </a>
-          </li>
-          <li>
-            <a href="/#how-it-works" className="nav-link">
-              How it Works
-            </a>
-          </li>
         </ul>
 
-        {/* Actions */}
+        {/* Theme Toggle */}
         <div className="nav-actions">
           <button
             className="theme-toggle"
-            onClick={cycleTheme}
-            aria-label={`Current: ${themeLabel}. Click to cycle theme.`}
-            title={themeLabel}
+            onClick={toggleTheme}
+            aria-label={`Current: ${themeLabel}. Click to switch to ${nextThemeLabel}.`}
+            title={`Switch to ${nextThemeLabel}`}
             id="theme-toggle-btn"
           >
             <ThemeIcon />
           </button>
-          <Link to="/library" className="nav-cta" id="nav-explore-btn">
-            Explore Library
-          </Link>
         </div>
       </div>
     </nav>

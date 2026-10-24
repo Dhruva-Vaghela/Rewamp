@@ -40,11 +40,12 @@ class RagPipeline:
         top_k = request.top_k or config.DEFAULT_TOP_K
 
         # Step 1: Retrieval
-        hits, has_sufficient_evidence, retrieval_latency_ms = retriever.retrieve(
+        retrieval_res = retriever.retrieve(
             book_id=request.book_id,
             question=request.question,
             top_k=top_k,
         )
+        hits, has_sufficient_evidence, retrieval_latency_ms = retrieval_res
 
         # Step 2: Generation
         (
@@ -97,6 +98,11 @@ class RagPipeline:
             total_tokens=total_tokens,
             context_tokens=context_tokens,
             cached=cached,
+            selected_book=request.book_id,
+            active_index_version=getattr(retrieval_res, "active_version", None),
+            retrieval_strategy=getattr(retrieval_res, "strategy", "dense_direct"),
+            candidate_counts=getattr(retrieval_res, "candidate_count", len(hits)),
+            refusal_reason=getattr(retrieval_res, "refusal_reason", None) if not effective_sufficient_evidence else None,
         )
 
         return ChatResponse(

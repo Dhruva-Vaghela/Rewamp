@@ -32,6 +32,7 @@ CRITICAL TONE & FORMAT RULES:
 5. You may reference source excerpt numbers with [Source 1], [Source 2] at the end of statements so citations can be recorded, but keep the surrounding prose completely natural.
 6. Ground your answer strictly in the provided book excerpts. Never invent outside facts, characters, or plot points.
 7. If the book does not contain enough information to answer the question, explain warmly and conversationally in one or two plain sentences that the book does not mention or cover that detail.
+8. For broad narrative, thematic, or synthesis questions (such as major turning points, crises, conflicts, themes, motifs, or character arcs), draw together the key events and ideas from across the provided excerpts to provide a cohesive synthesis, noting [Source N] for each referenced point.
 """
 
 

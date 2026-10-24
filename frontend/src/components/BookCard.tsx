@@ -3,16 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { BookSummary } from '../types'
 import { getCoverUrl, triggerBookIngest } from '../api/books'
 
-// A palette of rich cover gradients and tints for fallback covers
+// A palette of rich antique cover gradients and ornaments for fallback covers
 const COVER_PALETTES = [
-  { bg: 'linear-gradient(160deg, #1a0a2e 0%, #2d1250 100%)', textColor: '#e8d5ff', spineColor: '#4a1f8a', ornament: '✦' },
-  { bg: 'linear-gradient(160deg, #0a1a12 0%, #1c4232 100%)', textColor: '#c8e8d8', spineColor: '#1c5a30', ornament: '❧' },
-  { bg: 'linear-gradient(160deg, #1a0a08 0%, #3d1a10 100%)', textColor: '#f0d8c8', spineColor: '#6b2010', ornament: '☙' },
-  { bg: 'linear-gradient(160deg, #0a0e1a 0%, #1a2b4a 100%)', textColor: '#c8d8f8', spineColor: '#1a3060', ornament: '✧' },
-  { bg: 'linear-gradient(160deg, #1a1208 0%, #3d2c10 100%)', textColor: '#f8e8c0', spineColor: '#6b4a0a', ornament: '✾' },
-  { bg: 'linear-gradient(160deg, #0a1a1a 0%, #1a3a3a 100%)', textColor: '#b8e8e8', spineColor: '#1a5050', ornament: '❊' },
-  { bg: 'linear-gradient(160deg, #1a0f1a 0%, #3a2040 100%)', textColor: '#e8c8e8', spineColor: '#5a2a6a', ornament: '✦' },
-  { bg: 'linear-gradient(160deg, #0f1a0a 0%, #243a18 100%)', textColor: '#d4e8c0', spineColor: '#2a5a14', ornament: '❧' },
+  { bg: 'linear-gradient(160deg, #181028 0%, #291244 100%)', textColor: '#ebd5ff', spineColor: '#3d1c68', ornament: '✦' },
+  { bg: 'linear-gradient(160deg, #0c1a14 0%, #17382a 100%)', textColor: '#c8e8d8', spineColor: '#1a4e38', ornament: '❧' },
+  { bg: 'linear-gradient(160deg, #241108 0%, #3e1b0c 100%)', textColor: '#f2dac4', spineColor: '#582410', ornament: '☙' },
+  { bg: 'linear-gradient(160deg, #0e1424 0%, #182848 100%)', textColor: '#c8d8f8', spineColor: '#162e58', ornament: '✧' },
+  { bg: 'linear-gradient(160deg, #241908 0%, #402c0c 100%)', textColor: '#f8e8c0', spineColor: '#5c3e0a', ornament: '✾' },
+  { bg: 'linear-gradient(160deg, #0a181c 0%, #15323a 100%)', textColor: '#b8e8e8', spineColor: '#16444e', ornament: '❊' },
+  { bg: 'linear-gradient(160deg, #221020 0%, #3a1836 100%)', textColor: '#e8c8e8', spineColor: '#521c4c', ornament: '✦' },
+  { bg: 'linear-gradient(160deg, #141c0e 0%, #263816 100%)', textColor: '#d4e8c0', spineColor: '#284e14', ornament: '❧' },
 ]
 
 function getPalette(title: string) {
@@ -58,256 +58,179 @@ export default function BookCard({ book, onStatusChange }: BookCardProps) {
     }
   }
 
+  const handleCardClick = () => {
+    navigate(isReady ? `/chat/${encodeURIComponent(book.id)}` : `/read/${encodeURIComponent(book.id)}`)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleCardClick()
+    }
+  }
+
   return (
-    <div
-      className="book-card"
+    <article
+      className="fantasy-book-card"
       id={`book-card-${book.id}`}
-      style={{ display: 'flex', flexDirection: 'column' }}
+      tabIndex={0}
+      role="article"
+      aria-label={`${book.title} by ${book.author}`}
+      onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
     >
-      {/* Cover container */}
-      <div
-        className="book-card-cover"
-        onClick={() => navigate(isReady ? `/chat/${encodeURIComponent(book.id)}` : `/read/${encodeURIComponent(book.id)}`)}
-        style={{ cursor: 'pointer', position: 'relative' }}
-      >
-        <div className="book-card-cover-visual">
-          {!coverError ? (
-            <>
-              {!coverLoaded && (
-                <div className="book-cover-skeleton" aria-hidden="true">
-                  <div className="skeleton-shimmer" />
+      {/* 3D Physical Book Visual */}
+      <div className="physical-book-stage">
+        <div className="physical-book-object">
+          {/* Subtle Ambient Backlight Glow on hover */}
+          <div className="book-stage-glow" aria-hidden="true" />
+
+          {/* Hardcover Outer Frame */}
+          <div className="physical-cover-frame">
+            {/* Authentic Left Leather Spine Ridge */}
+            <div className="spine-ridge-overlay" aria-hidden="true">
+              <span className="spine-crease-line" />
+            </div>
+
+            {/* Stacked Paper Deckled Edge (Right & Bottom) */}
+            <div className="page-stack-rim" aria-hidden="true" />
+
+            {/* Cover Image or Fallback */}
+            {!coverError ? (
+              <div className="book-cover-media">
+                {!coverLoaded && (
+                  <div className="book-cover-skeleton" aria-hidden="true">
+                    <div className="skeleton-shimmer" />
+                  </div>
+                )}
+                <img
+                  src={coverUrl}
+                  alt={`Cover of ${book.title}`}
+                  loading="lazy"
+                  decoding="async"
+                  className={`book-cover-img ${coverLoaded ? 'is-loaded' : ''}`}
+                  onLoad={() => setCoverLoaded(true)}
+                  onError={() => {
+                    console.warn(`Cover failed to load for book '${book.id}', falling back to decorative cover.`)
+                    setCoverError(true)
+                  }}
+                />
+              </div>
+            ) : (
+              <div
+                className="book-fallback-cover"
+                style={{ background: palette.bg, color: palette.textColor }}
+              >
+                <div className="fallback-spine-band" style={{ background: palette.spineColor }} />
+                <div className="fallback-inner-border" style={{ borderColor: `${palette.textColor}30` }} />
+                <div className="fallback-ornament" style={{ color: palette.textColor }}>
+                  {palette.ornament}
                 </div>
+                <div className="fallback-title" style={{ color: palette.textColor }}>
+                  {book.title}
+                </div>
+                <div className="fallback-author" style={{ color: palette.textColor }}>
+                  {book.author}
+                </div>
+              </div>
+            )}
+
+            {/* Soft Satin Cover Finish */}
+            <div className="cover-satin-finish" aria-hidden="true" />
+
+            {/* Ingestion Status Jewel Badge */}
+            <div className="book-status-jewel">
+              {isReady ? (
+                <span className="badge-ready" title={`${book.chunk_count || 0} chunks indexed in Qdrant Cloud`}>
+                  <span className="badge-dot" />
+                  <span>Ready</span>
+                </span>
+              ) : ingesting || book.ingest_status === 'processing' ? (
+                <span className="badge-indexing">
+                  <span className="spinner-mini" />
+                  <span>Indexing…</span>
+                </span>
+              ) : book.ingest_status === 'failed' ? (
+                <span className="badge-failed">Failed</span>
+              ) : (
+                <button
+                  onClick={handleIngestClick}
+                  className="badge-ingest-action"
+                  title="Click to index book into Qdrant for AI Chat"
+                  aria-label={`Index ${book.title} for AI`}
+                >
+                  <span>⚡ Index</span>
+                </button>
               )}
-              <img
-                src={coverUrl}
-                alt={`Front cover of ${book.title}`}
-                loading="lazy"
-                decoding="async"
-                className={`book-cover-img ${coverLoaded ? 'is-loaded' : ''}`}
-                onLoad={() => setCoverLoaded(true)}
-                onError={() => {
-                  console.warn(`Cover failed to load for book '${book.id}', falling back to decorative cover.`)
-                  setCoverError(true)
-                }}
-              />
-            </>
-          ) : (
-            /* Polished Fallback Cover */
-            <div
-              className="book-fallback-cover"
-              style={{ background: palette.bg, color: palette.textColor }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: '6px',
-                  background: palette.spineColor,
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '12px',
-                  left: '12px',
-                  right: '12px',
-                  height: '1px',
-                  background: `${palette.textColor}30`,
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '12px',
-                  left: '12px',
-                  right: '12px',
-                  height: '1px',
-                  background: `${palette.textColor}30`,
-                }}
-              />
-              <div className="book-fallback-ornament" style={{ color: palette.textColor }}>
-                {palette.ornament}
-              </div>
-              <div className="book-fallback-title" style={{ color: palette.textColor }}>
-                {book.title}
-              </div>
-              <div className="book-fallback-author" style={{ color: palette.textColor }}>
-                {book.author}
+            </div>
+
+            {/* Quick Action Overlay (Reveals on Hover / Focus) */}
+            <div className="book-hover-actions-overlay" aria-hidden="true">
+              <div className="hover-actions-inner">
+                <Link
+                  to={`/chat/${encodeURIComponent(book.id)}`}
+                  className="hover-action-btn hover-btn-chat"
+                  onClick={(e) => e.stopPropagation()}
+                  tabIndex={-1}
+                >
+                  <span>💬 AI Chat</span>
+                </Link>
+                <Link
+                  to={`/read/${encodeURIComponent(book.id)}`}
+                  className="hover-action-btn hover-btn-read"
+                  onClick={(e) => e.stopPropagation()}
+                  tabIndex={-1}
+                >
+                  <span>📖 Read Book</span>
+                </Link>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Ingestion Status Badge */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            zIndex: 4,
-          }}
-        >
-          {isReady ? (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '4px 8px',
-                borderRadius: 20,
-                fontSize: 11,
-                fontWeight: 600,
-                background: 'rgba(16, 185, 129, 0.9)',
-                color: '#ffffff',
-                backdropFilter: 'blur(8px)',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-              }}
-              title={`${book.chunk_count || 0} chunks indexed in Qdrant Cloud`}
-            >
-              ✓ Ready
-            </span>
-          ) : ingesting || book.ingest_status === 'processing' ? (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '4px 8px',
-                borderRadius: 20,
-                fontSize: 11,
-                fontWeight: 600,
-                background: 'rgba(59, 130, 246, 0.9)',
-                color: '#ffffff',
-                backdropFilter: 'blur(8px)',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-              }}
-            >
-              <span className="spinner-mini" style={{ width: 10, height: 10, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
-              Indexing…
-            </span>
-          ) : book.ingest_status === 'failed' ? (
-            <span
-              style={{
-                padding: '4px 8px',
-                borderRadius: 20,
-                fontSize: 11,
-                fontWeight: 600,
-                background: 'rgba(239, 68, 68, 0.9)',
-                color: '#ffffff',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              Failed
-            </span>
-          ) : (
-            <button
-              onClick={handleIngestClick}
-              style={{
-                cursor: 'pointer',
-                border: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '4px 8px',
-                borderRadius: 20,
-                fontSize: 11,
-                fontWeight: 600,
-                background: 'rgba(245, 158, 11, 0.9)',
-                color: '#ffffff',
-                backdropFilter: 'blur(8px)',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-              }}
-              title="Click to index book into Qdrant for AI Chat"
-            >
-              + Ingest
-            </button>
-          )}
-        </div>
-
-        {/* Hover overlay */}
-        <div className="book-card-read-overlay">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '80%', alignItems: 'center' }}>
-            <Link
-              to={`/chat/${encodeURIComponent(book.id)}`}
-              className="btn btn-primary"
-              style={{ width: '100%', textAlign: 'center', padding: '8px 12px', fontSize: 13 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              💬 AI Chat
-            </Link>
-            <Link
-              to={`/read/${encodeURIComponent(book.id)}`}
-              className="btn btn-secondary"
-              style={{ width: '100%', textAlign: 'center', padding: '8px 12px', fontSize: 13 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              📖 Read PDF
-            </Link>
           </div>
         </div>
       </div>
 
-      {/* Info */}
-      <div className="book-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <div>
-          <h3 className="book-card-title">{book.title}</h3>
-          <p className="book-card-author">{book.author}</p>
+      {/* Book Metadata & Title Bar */}
+      <div className="book-card-info-panel">
+        <h3 className="fantasy-card-title" title={book.title}>
+          {book.title}
+        </h3>
+        <p className="fantasy-card-author">{book.author}</p>
+
+        <div className="fantasy-card-details">
+          {book.page_count ? (
+            <span className="detail-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              <span>{book.page_count} pages</span>
+            </span>
+          ) : null}
+          <span className="detail-pill detail-filesize">{formatFileSize(book.size_bytes)}</span>
         </div>
 
-        <div>
-          <div className="book-card-meta" style={{ marginBottom: 10 }}>
-            {book.page_count && (
-              <span className="book-card-pages">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
-                {book.page_count} pages
-              </span>
-            )}
-            <span>{formatFileSize(book.size_bytes)}</span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <Link
-              to={`/chat/${encodeURIComponent(book.id)}`}
-              className="btn btn-secondary"
-              style={{
-                fontSize: 12,
-                padding: '6px 8px',
-                textAlign: 'center',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-              }}
-              id={`chat-btn-${book.id}`}
-            >
-              <span>💬</span> Chat
-            </Link>
-            <Link
-              to={`/read/${encodeURIComponent(book.id)}`}
-              className="btn btn-ghost"
-              style={{
-                fontSize: 12,
-                padding: '6px 8px',
-                textAlign: 'center',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-              }}
-              id={`read-btn-${book.id}`}
-            >
-              <span>📖</span> Read
-            </Link>
-          </div>
+        {/* Permanent Quick-Action Links (Accessible on Mobile / Touch) */}
+        <div className="card-footer-actions">
+          <Link
+            to={`/chat/${encodeURIComponent(book.id)}`}
+            className="footer-btn footer-btn-chat"
+            id={`chat-btn-${book.id}`}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Open AI Chat for ${book.title}`}
+          >
+            <span aria-hidden="true">💬</span> Chat
+          </Link>
+          <Link
+            to={`/read/${encodeURIComponent(book.id)}`}
+            className="footer-btn footer-btn-read"
+            id={`read-btn-${book.id}`}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Read PDF for ${book.title}`}
+          >
+            <span aria-hidden="true">📖</span> Read
+          </Link>
         </div>
       </div>
-    </div>
+    </article>
   )
 }

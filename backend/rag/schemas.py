@@ -86,6 +86,12 @@ class Diagnostics(BaseModel):
     total_tokens: Optional[int] = None
     context_tokens: Optional[int] = None
     cached: Optional[bool] = False
+    # Diagnostic inspection fields
+    selected_book: Optional[str] = None
+    active_index_version: Optional[int] = None
+    retrieval_strategy: Optional[str] = None
+    candidate_counts: Optional[int] = None
+    refusal_reason: Optional[str] = None
 
 
 class ChatResponse(BaseModel):

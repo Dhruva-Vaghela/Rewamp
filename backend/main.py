@@ -10,6 +10,7 @@ import logging
 import os
 import re
 import unicodedata
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -229,10 +230,24 @@ class BookDetail(BaseModel):
 # App Definition & Middleware
 # ---------------------------------------------------------------------------
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Pre-warm covers and verify RAG dependencies."""
+    _reload_catalog()
+    for book in _CATALOG:
+        pdf_path = BOOKS_DIR / book["filename"]
+        try:
+            _ensure_cover(book["id"], pdf_path)
+        except Exception as e:
+            logger.warning("Cover pre-warm skipped for %s: %s", book["id"], e)
+    yield
+
+
 app = FastAPI(
     title="Rewamp Library API",
     description="Full-stack reading platform with Qdrant Cloud RAG and Groq LLM integration.",
     version="0.2.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -242,18 +257,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    """Pre-warm covers and verify RAG dependencies."""
-    _reload_catalog()
-    for book in _CATALOG:
-        pdf_path = BOOKS_DIR / book["filename"]
-        try:
-            _ensure_cover(book["id"], pdf_path)
-        except Exception as e:
-            logger.warning("Cover pre-warm skipped for %s: %s", book["id"], e)
 
 
 # ---------------------------------------------------------------------------

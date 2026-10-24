@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import Nav from '../components/Nav'
+import CentralKnowledgePortal from '../components/CentralKnowledgePortal'
+import ChatMagicalBackground from '../components/ChatMagicalBackground'
 import {
   fetchBooks,
   fetchBook,
@@ -11,35 +13,132 @@ import {
 } from '../api/books'
 import { BookSummary, BookDetail, ChatMessage, Citation } from '../types'
 
-// Icons
+// ── Icons ──
 const SendIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="m22 2-7 20-4-9-9-4Z"/>
     <path d="M22 2 11 13"/>
   </svg>
 )
 
 const SparklesIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
   </svg>
 )
 
 const BookOpenIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
     <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
   </svg>
 )
 
 const RefreshCwIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
     <path d="M21 3v5h-5"/>
     <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
     <path d="M8 16H3v5"/>
   </svg>
 )
+
+const ArrowRightIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14" />
+    <path d="m12 5 7 7-7 7" />
+  </svg>
+)
+
+// ── Thematic Card Icons matching the Reference Design ──
+const RabbitIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M10 2c-1.5 2-1 6-1 8" />
+    <path d="M8 3c-.8 2-.5 4.5 0 6" />
+    <path d="M14 2c1.5 2 1 6 1 8" />
+    <path d="M16 3c.8 2 .5 4.5 0 6" />
+    <path d="M8 10a4 4 0 0 0-4 4c0 3 3 5 8 5s8-2 8-5a4 4 0 0 0-4-4" />
+    <circle cx="9.5" cy="13.5" r="0.75" fill="currentColor" />
+    <circle cx="14.5" cy="13.5" r="0.75" fill="currentColor" />
+    <path d="M11 16.5c.5.5 1.5.5 2 0" />
+    <path d="M6 18c-1 1.5-1 3.5 1 4 2.5.5 10 .5 10 0 2-.5 2-2.5 1-4" />
+  </svg>
+)
+
+const TopHatIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <ellipse cx="12" cy="19" rx="9.5" ry="2.5" />
+    <path d="M6.5 18V8a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v10" />
+    <path d="M6.5 15h11" />
+    <path d="M6.5 8c0-1.2 2.5-2 5.5-2s5.5.8 5.5 2" />
+  </svg>
+)
+
+const CatIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 5c-3 0-5 1.5-6 3.5L4 4l1.5 5.5C4.5 11 4 12.5 4 14.5 4 18.5 7.5 21 12 21s8-2.5 8-6.5c0-2-.5-3.5-1.5-5L20 4l-2 4.5C17 6.5 15 5 12 5Z" />
+    <circle cx="9" cy="13" r="0.9" fill="currentColor" />
+    <circle cx="15" cy="13" r="0.9" fill="currentColor" />
+    <polygon points="12,15 11,16.5 13,16.5" fill="currentColor" />
+    <path d="M6.5 14H3.5" />
+    <path d="M6.5 16.5H4" />
+    <path d="M17.5 14H20.5" />
+    <path d="M17.5 16.5H20" />
+  </svg>
+)
+
+const TeaCupIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 19h14" />
+    <path d="M4 10v4a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5v-4H4Z" />
+    <path d="M16 11h2a2.5 2.5 0 0 1 0 5h-2" />
+    <path d="M7 6c0-1.5 1.5-2 1.5-3" />
+    <path d="M11 6c0-1.5 1.5-2 1.5-3" />
+  </svg>
+)
+
+const MagnifyingGlassIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="11" cy="11" r="7" />
+    <path d="m21 21-4.35-4.35" />
+  </svg>
+)
+
+const QuillIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20 2c-3.5 0-7 2-9.5 5.5A17 17 0 0 0 6 18l-3 4 4-2.5c4-2 7.5-5 9.5-9.5C18 7.5 20 4.5 20 2Z" />
+    <path d="M14 8l-6 6" />
+  </svg>
+)
+
+const CompassIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" fillOpacity="0.25" />
+  </svg>
+)
+
+const SparkleStarIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="m12 2 2.6 6.8L21.4 11l-5.6 4.8 1.8 7.2-5.6-3.8-5.6 3.8 1.8-7.2L2.6 11l6.8-2.2L12 2Z"/>
+  </svg>
+)
+
+// Helper to assign thematic icons for questions
+function getQuestionThematicIcon(question: string, index: number) {
+  const q = question.toLowerCase()
+  if (q.includes('rabbit') || q.includes('hole')) return <RabbitIcon />
+  if (q.includes('caterpillar') || q.includes('advice') || (q.includes('hatter') && !q.includes('tea'))) return <TopHatIcon />
+  if (q.includes('cheshire') || q.includes('cat')) return <CatIcon />
+  if (q.includes('tea') || q.includes('cup') || q.includes('riddle') || q.includes('party')) return <TeaCupIcon />
+  if (q.includes('sherlock') || q.includes('holmes') || q.includes('deduce') || q.includes('mystery')) return <MagnifyingGlassIcon />
+  if (q.includes('frankenstein') || q.includes('creature') || q.includes('arctic')) return <CompassIcon />
+  if (q.includes('gatsby') || q.includes('light') || q.includes('dock')) return <SparkleStarIcon />
+  if (q.includes('darcy') || q.includes('elizabeth') || q.includes('bennet')) return <QuillIcon />
+
+  const fallbacks = [<RabbitIcon />, <TopHatIcon />, <CatIcon />, <TeaCupIcon />]
+  return fallbacks[index % fallbacks.length]
+}
 
 // Clean and format text into natural, conversational plain text without markdown asterisks or [Source X] tags
 function formatCleanProse(text: string): string {
@@ -57,7 +156,6 @@ function formatCleanProse(text: string): string {
     .replace(/[ \t]{2,}/g, ' ')
     .trim()
 }
-
 
 // Book-specific suggested questions
 const SUGGESTED_QUESTIONS: Record<string, string[]> = {
@@ -91,6 +189,24 @@ const SUGGESTED_QUESTIONS: Record<string, string[]> = {
     'How does Holmes deduce Dr. Watson’s activities when they meet?',
     'What was the secret of the Speckled Band?',
   ],
+  'phantastes-a-faerie-romance-for-men-and-women-george-macdonald': [
+    'How does Anodos discover the doorway into the Fairy Land?',
+    'What warning is Anodos given about the Ash Tree and Alder Maiden?',
+    'Who is the marble lady that Anodos seeks to awaken?',
+    'What does the shadow that follows Anodos represent?',
+  ],
+  'the-mill-on-the-floss-george-eliot': [
+    'What defines the relationship between Maggie Tulliver and her brother Tom?',
+    'Why does Mr. Tulliver lose the mill in the lawsuit against Wakem?',
+    'How does Maggie’s relationship with Philip Wakem develop in secret?',
+    'What tragedy occurs during the great flood on the Floss?',
+  ],
+  'the-three-musketeers-alexandre-dumas': [
+    'How does d’Artagnan meet and challenge Athos, Porthos, and Aramis?',
+    'What mission do the musketeers undertake to retrieve the diamond studs?',
+    'Who is Milady de Winter and what is her past with Athos?',
+    'What was the significance of Cardinal Richelieu’s safe-conduct letter?',
+  ],
 }
 
 const GENERIC_QUESTIONS = [
@@ -114,7 +230,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [topK, setTopK] = useState(5)
+  const [topK] = useState(5)
 
   // Inspection & diagnostic state
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null)
@@ -124,7 +240,9 @@ export default function ChatPage() {
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (typeof messagesEndRef.current?.scrollIntoView === 'function') {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   useEffect(() => {
@@ -145,9 +263,24 @@ export default function ChatPage() {
       .catch(console.error)
   }, [bookId, navigate])
 
-  // Load selected book details and ingestion status
+  // Load selected book details and auto-refresh chat state on bookId change
   useEffect(() => {
     if (!bookId) return
+
+    // Auto-refresh chat workspace: clear old messages, input, and citation view
+    setMessages([])
+    setInput('')
+    setActiveCitation(null)
+    setIsSending(false)
+
+    // Instantly preview book from allBooks if loaded to eliminate delay/flash
+    if (allBooks.length > 0) {
+      const match = allBooks.find((b) => b.id === bookId)
+      if (match) {
+        setSelectedBook(match as unknown as BookDetail)
+        setIngestStatus(match.ingest_status || 'pending')
+      }
+    }
 
     setLoadingBook(true)
     fetchBook(bookId)
@@ -166,7 +299,7 @@ export default function ChatPage() {
         setIngestStatus(st.status)
       })
       .catch(console.error)
-  }, [bookId])
+  }, [bookId, allBooks])
 
   // Periodic poll if current book is processing
   useEffect(() => {
@@ -268,125 +401,77 @@ export default function ChatPage() {
   const isBookReady = ingestStatus === 'ready'
 
   return (
-    <div className="chat-page" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', paddingTop: 64 }}>
+    <div className="chat-page">
+      {/* Cinematic Enchanted Library Magical Backdrop */}
+      <ChatMagicalBackground />
+
       <Nav />
 
       {/* Main Workspace Layout */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: 1200, width: '100%', margin: '0 auto', padding: '24px 20px 28px' }}>
+      <div className="chat-workspace-layout">
         
         {/* Book Header Bar */}
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 16,
-            padding: '14px 20px',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-card)',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-card)',
-            marginBottom: 16,
-          }}
-        >
+        <header className="chat-book-header-bar">
           {/* Left: Book Thumbnail & Info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div className="chat-header-left">
             {selectedBook && (
               <img
                 src={selectedBook.cover_url || getCoverUrl(selectedBook.id)}
                 alt={selectedBook.title}
-                style={{
-                  width: 44,
-                  height: 60,
-                  objectFit: 'cover',
-                  borderRadius: 4,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                }}
+                className="chat-book-thumb"
               />
             )}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <h1 style={{ margin: 0, fontSize: 18, fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
+                <h1 className="chat-book-title">
                   {selectedBook ? selectedBook.title : 'AI Reading Workspace'}
                 </h1>
 
                 {/* Status Badge */}
                 {isBookReady ? (
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: '2px 8px',
-                      borderRadius: 12,
-                      background: 'rgba(16, 185, 129, 0.15)',
-                      color: '#10b981',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
-                    }}
-                  >
+                  <span className="chat-status-jewel-pill ready">
                     ✓ Ready ({selectedBook?.chunk_count || 0} chunks)
                   </span>
                 ) : ingestStatus === 'processing' || isIngesting ? (
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: '2px 8px',
-                      borderRadius: 12,
-                      background: 'rgba(59, 130, 246, 0.15)',
-                      color: '#3b82f6',
-                      border: '1px solid rgba(59, 130, 246, 0.3)',
-                    }}
-                  >
+                  <span className="chat-status-jewel-pill processing">
                     <span className="spinner-mini" style={{ width: 8, height: 8, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
                     Indexing Book…
                   </span>
                 ) : (
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: '2px 8px',
-                      borderRadius: 12,
-                      background: 'rgba(245, 158, 11, 0.15)',
-                      color: '#f59e0b',
-                      border: '1px solid rgba(245, 158, 11, 0.3)',
-                    }}
-                  >
+                  <span className="chat-status-jewel-pill pending">
                     Needs Indexing
                   </span>
                 )}
               </div>
-              <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
+              <p className="chat-book-author">
                 {selectedBook ? `by ${selectedBook.author}` : 'Select a book to ask grounded questions'}
               </p>
             </div>
           </div>
 
           {/* Right: Actions & Book Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <div className="chat-header-actions">
             {/* Book Selector Dropdown */}
             {allBooks.length > 0 && (
               <select
                 aria-label="Select book to chat with"
                 value={bookId || ''}
-                onChange={(e) => navigate(`/chat/${encodeURIComponent(e.target.value)}`)}
-                style={{
-                  padding: '7px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--bg-secondary)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border-subtle)',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  maxWidth: 200,
+                onChange={(e) => {
+                  const nextId = e.target.value
+                  if (nextId && nextId !== bookId) {
+                    setMessages([])
+                    setInput('')
+                    setActiveCitation(null)
+                    setIsSending(false)
+                    const found = allBooks.find((b) => b.id === nextId)
+                    if (found) {
+                      setSelectedBook(found as unknown as BookDetail)
+                      setIngestStatus(found.ingest_status || 'pending')
+                    }
+                    navigate(`/chat/${encodeURIComponent(nextId)}`)
+                  }
                 }}
+                className="chat-book-selector"
               >
                 {allBooks.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -396,12 +481,11 @@ export default function ChatPage() {
               </select>
             )}
 
-            {/* Read Book Button */}
+            {/* Read PDF Button */}
             {bookId && (
               <Link
                 to={`/read/${encodeURIComponent(bookId)}`}
-                className="btn btn-secondary"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', fontSize: 13 }}
+                className="chat-read-pdf-btn"
                 title="Open PDF Reader"
               >
                 <BookOpenIcon />
@@ -409,13 +493,11 @@ export default function ChatPage() {
               </Link>
             )}
 
-
             {/* Reset Chat */}
             {messages.length > 0 && (
               <button
-                className="btn btn-ghost"
+                className="chat-new-chat-btn"
                 onClick={handleResetChat}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 10px', fontSize: 13 }}
                 title="Clear current conversation"
               >
                 <RefreshCwIcon />
@@ -436,9 +518,10 @@ export default function ChatPage() {
               gap: 14,
               padding: '14px 20px',
               borderRadius: 'var(--radius-md)',
-              background: 'rgba(245, 158, 11, 0.1)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
               marginBottom: 16,
+              backdropFilter: 'blur(8px)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -448,7 +531,7 @@ export default function ChatPage() {
                   This book has not been indexed for AI retrieval yet.
                 </strong>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
-                  Extracting text and storing vectors in Qdrant Cloud enables instant, grounded answers with citations.
+                  Extracting text and storing vectors in Qdrant enables instant, grounded answers with citations.
                 </p>
               </div>
             </div>
@@ -473,7 +556,6 @@ export default function ChatPage() {
           </div>
         )}
 
-
         {/* Message Conversation Area */}
         <div
           style={{
@@ -484,93 +566,45 @@ export default function ChatPage() {
             flexDirection: 'column',
             gap: 18,
             padding: '12px 0 24px',
+            position: 'relative',
+            zIndex: 2,
           }}
         >
           {messages.length === 0 ? (
-            /* Welcome Empty State with Suggested Prompts */
-            <div
-              style={{
-                margin: 'auto',
-                maxWidth: 680,
-                textAlign: 'center',
-                padding: '40px 20px',
-              }}
-            >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: '50%',
-                  background: 'rgba(201, 168, 76, 0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 18px',
-                  color: 'var(--accent-gold)',
-                  fontSize: 24,
-                }}
-              >
-                <SparklesIcon />
-              </div>
+            /* Welcome Empty State: Living Knowledge Portal + 2-Column Suggested Grid */
+            <div className="chat-welcome-container">
+              {/* Central Living Knowledge Portal with dynamic glow */}
+              <CentralKnowledgePortal isGenerating={isSending} />
 
-              <h2 style={{ fontSize: 22, fontFamily: 'var(--font-display)', margin: '0 0 8px', color: 'var(--text-primary)' }}>
-                Ask anything about {selectedBook ? `"${selectedBook.title}"` : 'this book'}
-              </h2>
-              <p style={{ margin: '0 0 28px', color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
-                Every answer is grounded strictly in the text using Qdrant vector retrieval and verified Groq LLM inference, with exact page citations.
+              <h2 className="chat-welcome-title">Step Inside the Story</h2>
+              <p className="chat-welcome-subtitle">
+                Ask questions, uncover hidden details, and explore the world within your book.
               </p>
 
-              {/* Suggested Questions */}
-              <div style={{ textAlign: 'left', width: '100%' }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12, textAlign: 'center' }}>
-                  Suggested Questions
-                </p>
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
-                    gap: 10,
-                  }}
-                >
-                  {currentQuestions.map((q, idx) => (
-                    <button
-                      key={idx}
-                      className="btn"
-                      onClick={() => handleSendMessage(q)}
-                      disabled={isSending || !isBookReady}
-                      style={{
-                        padding: '10px 18px',
-                        background: 'var(--bg-card)',
-                        border: '1px solid var(--border-card)',
-                        borderRadius: 24,
-                        textAlign: 'left',
-                        color: 'var(--text-primary)',
-                        fontSize: 13,
-                        lineHeight: 1.4,
-                        transition: 'all 0.2s ease',
-                        cursor: isBookReady ? 'pointer' : 'not-allowed',
-                        opacity: isBookReady ? 1 : 0.6,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (isBookReady) {
-                          e.currentTarget.style.borderColor = 'var(--accent-gold)'
-                          e.currentTarget.style.transform = 'translateY(-1px)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--border-card)'
-                        e.currentTarget.style.transform = 'none'
-                      }}
-                    >
-                      <span style={{ color: 'var(--accent-gold)' }}>✦</span>
-                      <span>{q}</span>
-                    </button>
-                  ))}
-                </div>
+              {/* Eyebrow Label */}
+              <div className="chat-suggested-eyebrow">
+                <span>✦ SUGGESTED QUESTIONS ✦</span>
+              </div>
+
+              {/* 2-Column Desktop / Responsive Mobile Suggested Question Cards */}
+              <div className="chat-suggested-grid">
+                {currentQuestions.map((q, idx) => (
+                  <button
+                    key={idx}
+                    className="chat-suggested-card"
+                    onClick={() => handleSendMessage(q)}
+                    disabled={isSending || !isBookReady}
+                    title={q}
+                  >
+                    <div className="suggested-card-icon">
+                      {getQuestionThematicIcon(q, idx)}
+                    </div>
+                    <span className="suggested-card-text">{q}</span>
+                    <div className="suggested-card-arrow" aria-hidden="true">
+                      <ArrowRightIcon />
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           ) : (
@@ -591,13 +625,15 @@ export default function ChatPage() {
                     maxWidth: msg.sender === 'user' ? '75%' : '88%',
                     padding: msg.sender === 'user' ? '12px 18px' : '18px 22px',
                     borderRadius: msg.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                    background: msg.sender === 'user' ? 'var(--gradient-cta)' : 'var(--bg-card)',
+                    background: msg.sender === 'user' ? 'var(--gradient-cta)' : 'var(--chat-card-glass)',
                     color: msg.sender === 'user' ? '#0d0b08' : 'var(--text-primary)',
-                    border: msg.sender === 'user' ? 'none' : '1px solid var(--border-card)',
+                    border: msg.sender === 'user' ? 'none' : '1px solid var(--chat-card-border)',
                     boxShadow: 'var(--shadow-card)',
                     fontSize: 14.5,
                     lineHeight: 1.65,
                     fontFamily: msg.sender === 'assistant' ? 'var(--font-reading)' : 'var(--font-body)',
+                    backdropFilter: msg.sender === 'assistant' ? 'blur(10px)' : 'none',
+                    WebkitBackdropFilter: msg.sender === 'assistant' ? 'blur(10px)' : 'none',
                   }}
                 >
                   {/* Sender Header */}
@@ -718,12 +754,14 @@ export default function ChatPage() {
                 style={{
                   padding: '16px 22px',
                   borderRadius: '18px 18px 18px 4px',
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-card)',
-                  boxShadow: 'var(--shadow-card)',
+                  background: 'var(--chat-card-glass)',
+                  border: '1px solid var(--chat-card-border)',
+                  boxShadow: 'var(--chat-card-shadow)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 12,
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
                 }}
               >
                 <div
@@ -731,7 +769,7 @@ export default function ChatPage() {
                   style={{ width: 18, height: 18, borderWidth: 2 }}
                 />
                 <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
-                  Searching Qdrant vectors & generating grounded answer with Groq…
+                  Consulting book constellations & generating grounded answer…
                 </span>
               </div>
             </div>
@@ -740,81 +778,21 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Control Bar */}
-        <div
-          style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-card)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '12px 16px',
-            boxShadow: 'var(--shadow-card)',
-            position: 'sticky',
-            bottom: 0,
-            zIndex: 10,
-          }}
-        >
-          {/* Horizontally Scrollable Suggested Questions (Always visible above input) */}
-          {currentQuestions && currentQuestions.length > 0 && isBookReady && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                overflowX: 'auto',
-                whiteSpace: 'nowrap',
-                paddingBottom: 8,
-                marginBottom: 8,
-                borderBottom: '1px solid var(--border-subtle)',
-                scrollbarWidth: 'none',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: 'var(--accent-gold)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  flexShrink: 0,
-                  fontWeight: 500,
-                  marginRight: 4,
-                }}
-              >
+        {/* Chat Composer Card */}
+        <div className="chat-composer-card">
+          {/* Horizontally Scrollable Suggested Questions (Visible when chatting so questions remain accessible) */}
+          {currentQuestions && currentQuestions.length > 0 && isBookReady && messages.length > 0 && (
+            <div className="composer-suggested-row">
+              <span className="composer-suggested-label">
                 <SparklesIcon />
                 <span>Suggested:</span>
               </span>
               {currentQuestions.map((q, idx) => (
                 <button
                   key={idx}
+                  className="composer-suggested-chip"
                   onClick={() => handleSendMessage(q)}
                   disabled={isSending}
-                  style={{
-                    flexShrink: 0,
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 20,
-                    padding: '5px 12px',
-                    fontSize: 12,
-                    color: 'var(--text-secondary)',
-                    cursor: isSending ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.15s ease',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    whiteSpace: 'nowrap',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isSending) {
-                      e.currentTarget.style.borderColor = 'var(--accent-gold)'
-                      e.currentTarget.style.color = 'var(--text-primary)'
-                      e.currentTarget.style.background = 'var(--bg-card-hover)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--border-subtle)'
-                    e.currentTarget.style.color = 'var(--text-secondary)'
-                    e.currentTarget.style.background = 'var(--bg-secondary)'
-                  }}
                   title={q}
                 >
                   <span style={{ color: 'var(--accent-gold)' }}>✦</span>
@@ -824,7 +802,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+          <div className="composer-input-row">
             <textarea
               ref={inputRef}
               rows={2}
@@ -837,36 +815,14 @@ export default function ChatPage() {
                   ? `Ask a question about ${selectedBook?.title || 'this book'} (Enter to send, Shift+Enter for newline)…`
                   : 'Please index this book before asking questions…'
               }
-              style={{
-                flex: 1,
-                resize: 'none',
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                color: 'var(--text-primary)',
-                fontSize: 14,
-                lineHeight: 1.5,
-                fontFamily: 'var(--font-body)',
-              }}
+              className="composer-textarea"
             />
 
             <button
-              className="btn btn-primary"
+              className="composer-send-btn"
               onClick={() => handleSendMessage()}
               disabled={!input.trim() || isSending || !isBookReady}
               id="chat-send-btn"
-              style={{
-                borderRadius: '50%',
-                width: 42,
-                height: 42,
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                opacity: (!input.trim() || isSending || !isBookReady) ? 0.5 : 1,
-                cursor: (!input.trim() || isSending || !isBookReady) ? 'not-allowed' : 'pointer',
-              }}
               title="Send question"
             >
               <SendIcon />

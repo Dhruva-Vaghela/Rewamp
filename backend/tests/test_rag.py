@@ -467,3 +467,108 @@ def test_audit_recovery_after_restart(tmp_path):
     recovered_book = store2.get_book_status("interrupted-book")
     assert recovered_book.status == "ready"  # Restored to ready because chunk_count > 0
 
+
+# ---------------------------------------------------------------------------
+# Broad Question & Intent-Aware Retrieval Tests (Issue Reproduction & Fix)
+# ---------------------------------------------------------------------------
+
+def test_intent_classification_and_expansion():
+    """Verify that broad questions are classified as BROAD_SYNTHESIS with query expansions."""
+    from backend.rag.retriever import classify_query_intent
+
+    # Broad questions
+    intent, cw, sw, expansions = classify_query_intent("What major turning point or crisis occurs in the narrative?")
+    assert intent == "BROAD_SYNTHESIS"
+    assert len(expansions) >= 2
+    assert any("pivotal" in exp for exp in expansions)
+
+    intent2, _, _, expansions2 = classify_query_intent("What are the primary themes and motifs explored in this book?")
+    assert intent2 == "BROAD_SYNTHESIS"
+    assert len(expansions2) >= 2
+    assert any("themes" in exp for exp in expansions2)
+
+    # Specific factual question
+    intent3, _, sw3, expansions3 = classify_query_intent("Why did Alice follow the White Rabbit down the rabbit hole?")
+    assert intent3 == "SPECIFIC_FACTUAL"
+    assert len(expansions3) == 0
+    assert "rabbit" in sw3
+
+
+def test_broad_turning_point_reproduction_fixed():
+    """Verify that 'What major turning point or crisis occurs in the narrative?' is answerable with sufficient evidence on The Mill on the Floss."""
+    from backend.rag.retriever import retriever
+
+    mill_id = "the-mill-on-the-floss-george-eliot-9931"
+    question = "What major turning point or crisis occurs in the narrative?"
+
+    result = retriever.retrieve(mill_id, question, top_k=5)
+    hits, sufficient, _ = result
+
+    assert sufficient is True
+    assert len(hits) >= 3
+    assert result.strategy == "multi_angle_synthesis"
+    # Ensure cross-narrative coverage (multiple pages/chapters represented)
+    pages = {h["page_start"] for h in hits}
+    assert len(pages) >= 2
+
+
+def test_broad_questions_across_multiple_books():
+    """Verify that broad narrative and thematic questions are deemed sufficient across multiple books."""
+    from backend.rag.retriever import retriever
+
+    test_cases = [
+        ("frankenstein-mary-shelley", "What major turning point or crisis occurs in the narrative?"),
+        ("the-great-gatsby-f-scott-fitzgerald", "What major turning point or crisis occurs in the narrative?"),
+        ("pride-and-prejudice-jane-austen", "What are the primary themes and motifs explored in this book?"),
+        ("the-three-musketeers-alexandre-dumas-9929", "What central conflict or struggle drives the narrative?"),
+    ]
+
+    for book_id, query in test_cases:
+        hits, sufficient, _ = retriever.retrieve(book_id, query, top_k=5)
+        assert sufficient is True, f"Failed for {book_id} on query '{query}'"
+        assert len(hits) >= 2
+
+
+def test_unsupported_questions_correctly_rejected():
+    """Verify that genuinely unanswerable/out-of-domain questions are rejected as insufficient with clear refusal reasons."""
+    from backend.rag.retriever import retriever
+
+    unsupported = [
+        ("alice-s-adventures-in-wonderland-lewis-carroll-9898", "What model of smartphone or iPhone does Alice use?"),
+        ("frankenstein-mary-shelley", "How did Harry Potter defeat Voldemort with his wand?"),
+        ("the-mill-on-the-floss-george-eliot-9931", "What did the spaceship captain discover on Mars?"),
+    ]
+
+    for book_id, query in unsupported:
+        result = retriever.retrieve(book_id, query, top_k=5)
+        hits, sufficient, _ = result
+        assert sufficient is False, f"Should have rejected unanswerable query '{query}' for {book_id}"
+        assert result.refusal_reason in {
+            "low_keyword_and_semantic_coverage",
+            "missing_substantive_topic_keywords",
+            "below_absolute_noise_floor",
+        }
+
+
+def test_pipeline_diagnostics_broad_synthesis_e2e():
+    """Verify full end-to-end RAG pipeline for broad question includes structured diagnostics and citations."""
+    from backend.rag.pipeline import rag_pipeline
+    from backend.rag.schemas import ChatRequest
+
+    req = ChatRequest(
+        book_id="the-mill-on-the-floss-george-eliot-9931",
+        question="What major turning point or crisis occurs in the narrative?",
+        top_k=5,
+    )
+    resp = rag_pipeline.answer_question(req, book_title="The Mill on the Floss")
+
+    assert resp.sufficient_evidence is True
+    assert resp.is_grounded is True
+    assert len(resp.citations) >= 1
+    assert resp.diagnostics is not None
+    assert resp.diagnostics.retrieval_strategy == "multi_angle_synthesis"
+    assert resp.diagnostics.active_index_version == 2
+    assert resp.diagnostics.selected_book == "the-mill-on-the-floss-george-eliot-9931"
+    assert resp.diagnostics.candidate_counts is not None and resp.diagnostics.candidate_counts >= 5
+
+
