@@ -32,6 +32,8 @@ class EmbeddingService:
         self.dimension = config.EMBEDDING_DIMENSION
         self._ensure_model()
 
+    _tokenizer = None
+
     def _ensure_model(self) -> None:
         if self._model is None:
             try:
@@ -42,6 +44,25 @@ class EmbeddingService:
             except Exception as exc:
                 logger.error("Failed to initialize embedding model %s: %s", self.model_name, exc)
                 raise RuntimeError(f"Embedding model initialization failed: {exc}") from exc
+
+    def get_tokenizer(self):
+        """Returns tokenizer compatible with the current embedding model."""
+        if self._tokenizer is None:
+            self._ensure_model()
+            import copy
+            # Use a non-truncating copy so token counts are exact for arbitrary lengths
+            raw_tok = self._model.model.tokenizer
+            tok_copy = copy.deepcopy(raw_tok)
+            tok_copy.no_truncation()
+            self._tokenizer = tok_copy
+        return self._tokenizer
+
+    def count_tokens(self, text: str) -> int:
+        """Calculate exact token count using model's tokenizer without truncation."""
+        if not text:
+            return 0
+        tokenizer = self.get_tokenizer()
+        return len(tokenizer.encode(text, add_special_tokens=False).ids)
 
     def embed_texts(self, texts: List[str], batch_size: int = 64) -> List[List[float]]:
         """

@@ -48,17 +48,27 @@ class RagConfig:
     EMBEDDING_DIMENSION: int = 384
     EMBEDDING_DISTANCE: str = "Cosine"
 
-    # --- Chunking ---
-    # Approximate 1 token ~= 4 characters for English prose
-    CHUNK_SIZE_TOKENS: int = 500
-    CHUNK_OVERLAP_TOKENS: int = 80
-    TARGET_CHUNK_CHARS: int = CHUNK_SIZE_TOKENS * 4      # ~2000 chars
-    CHUNK_OVERLAP_CHARS: int = CHUNK_OVERLAP_TOKENS * 4   # ~320 chars
+    # --- Chunking (Token-aware, calibrated for 512-token FastEmbed embedding limit) ---
+    CHUNK_TARGET_TOKENS: int = int(os.getenv("CHUNK_TARGET_TOKENS", "384"))
+    CHUNK_OVERLAP_TOKENS: int = int(os.getenv("CHUNK_OVERLAP_TOKENS", "64"))
+    CHUNK_MAX_TOKENS: int = int(os.getenv("CHUNK_MAX_TOKENS", "490"))  # Strict ceiling to prevent truncation
+    # Backwards-compatible aliases
+    CHUNK_SIZE_TOKENS: int = CHUNK_TARGET_TOKENS
+    TARGET_CHUNK_CHARS: int = CHUNK_TARGET_TOKENS * 4
+    CHUNK_OVERLAP_CHARS: int = CHUNK_OVERLAP_TOKENS * 4
 
-    # --- Retrieval ---
+    # --- Retrieval & Context Selection ---
     DEFAULT_TOP_K: int = 5
-    # Cosine similarity threshold for evidence sufficiency
-    MIN_SIMILARITY_SCORE: float = 0.35
+    RETRIEVAL_CANDIDATE_POOL: int = 15  # Candidate pool for reranking/deduplication
+    DEDUPLICATION_THRESHOLD: float = 0.65  # Max Jaccard similarity between selected chunks
+    # Evidence sufficiency thresholds
+    MIN_SIMILARITY_SCORE: float = 0.58
+    EVIDENCE_GAP_RATIO: float = 1.15
+
+    # --- Context & Token Optimization ---
+    MAX_CONTEXT_TOKENS: int = int(os.getenv("MAX_CONTEXT_TOKENS", "2200"))
+    CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", "300"))
+    CACHE_MAX_ENTRIES: int = 256
 
     # --- Groq LLM ---
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()

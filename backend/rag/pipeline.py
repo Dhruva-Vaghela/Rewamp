@@ -47,7 +47,19 @@ class RagPipeline:
         )
 
         # Step 2: Generation
-        answer, citations, is_grounded, gen_latency_ms, model_used = generator.generate_answer(
+        (
+            answer,
+            citations,
+            is_grounded,
+            gen_latency_ms,
+            model_used,
+            prompt_tokens,
+            completion_tokens,
+            total_tokens,
+            context_tokens,
+            cached,
+        ) = generator.generate_answer(
+            book_id=request.book_id,
             book_title=book_title or request.book_id,
             question=request.question,
             retrieved_chunks=hits,
@@ -69,6 +81,8 @@ class RagPipeline:
             for h in hits
         ]
 
+        effective_sufficient_evidence = has_sufficient_evidence and is_grounded
+
         diagnostics = Diagnostics(
             retrieval_time_ms=round(retrieval_latency_ms, 2),
             generation_time_ms=round(gen_latency_ms, 2),
@@ -76,8 +90,13 @@ class RagPipeline:
             model=model_used,
             embedding_model=config.EMBEDDING_MODEL_NAME,
             chunks_retrieved=len(hits),
-            sufficient_evidence=has_sufficient_evidence,
+            sufficient_evidence=effective_sufficient_evidence,
             retrieved_chunks=diagnostic_chunks,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
+            context_tokens=context_tokens,
+            cached=cached,
         )
 
         return ChatResponse(
@@ -86,7 +105,7 @@ class RagPipeline:
             answer=answer,
             citations=citations,
             is_grounded=is_grounded,
-            sufficient_evidence=has_sufficient_evidence,
+            sufficient_evidence=effective_sufficient_evidence,
             diagnostics=diagnostics,
         )
 

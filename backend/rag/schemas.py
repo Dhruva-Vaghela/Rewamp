@@ -18,7 +18,9 @@ class BookIngestStatus(BaseModel):
     title: str
     status: str = Field(..., description="One of: pending, processing, ready, failed")
     chunk_count: int = 0
+    active_version: Optional[int] = None
     file_hash: Optional[str] = None
+    config_hash: Optional[str] = None
     error: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -32,7 +34,7 @@ class IngestJobResponse(BaseModel):
 
 class IngestJobProgress(BaseModel):
     job_id: str
-    status: str  # pending, running, completed, failed
+    status: str  # pending, running, completed, completed_with_errors, failed
     total_books: int
     processed_books: int
     current_book: Optional[str] = None
@@ -79,6 +81,11 @@ class Diagnostics(BaseModel):
     chunks_retrieved: int
     sufficient_evidence: bool
     retrieved_chunks: List[DiagnosticChunk] = []
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+    context_tokens: Optional[int] = None
+    cached: Optional[bool] = False
 
 
 class ChatResponse(BaseModel):
