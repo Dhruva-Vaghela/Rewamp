@@ -6,18 +6,67 @@ import {
   IngestJobProgress,
 } from '../types'
 
-const API_BASE = '/api'
+/**
+ * Normalizes the API base URL:
+ * - Uses import.meta.env.VITE_API_BASE_URL when defined (e.g. https://rewamp-library.onrender.com or https://rewamp-library.onrender.com/api).
+ * - Falls back to '/api' when unset so local development through the Vite proxy continues to work seamlessly.
+ */
+function getApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim()
+  if (!envUrl) {
+    return '/api'
+  }
+  const clean = envUrl.replace(/\/+$/, '')
+  return clean.endsWith('/api') ? clean : `${clean}/api`
+}
+
+export const API_BASE = getApiBaseUrl()
+
+/**
+ * Resolves a backend resource path or URL (e.g., covers, PDFs) against the configured backend origin.
+ * In local dev (unset VITE_API_BASE_URL), relative paths like '/api/books/...' are preserved for the Vite proxy.
+ * In production (configured VITE_API_BASE_URL), relative paths resolve to the absolute Render backend URL.
+ */
+export function resolveResourceUrl(urlOrPath?: string | null): string {
+  if (!urlOrPath) return ''
+
+  // If already absolute (http://, https://, data:, blob:), return as-is
+  if (/^(?:https?:|\/\/|data:|blob:)/i.test(urlOrPath)) {
+    return urlOrPath
+  }
+
+  // If API_BASE is an absolute URL (e.g. https://rewamp-library.onrender.com/api)
+  if (/^https?:\/\//i.test(API_BASE)) {
+    try {
+      const url = new URL(API_BASE)
+      const path = urlOrPath.startsWith('/') ? urlOrPath : `/${urlOrPath}`
+      return `${url.origin}${path}`
+    } catch {
+      return urlOrPath
+    }
+  }
+
+  return urlOrPath
+}
 
 export async function fetchBooks(): Promise<BookSummary[]> {
   const res = await fetch(`${API_BASE}/books`)
   if (!res.ok) throw new Error(`Failed to fetch books: ${res.status} ${res.statusText}`)
-  return res.json()
+  const books: BookSummary[] = await res.json()
+  return books.map((book) => ({
+    ...book,
+    cover_url: resolveResourceUrl(book.cover_url) || getCoverUrl(book.id),
+  }))
 }
 
 export async function fetchBook(bookId: string): Promise<BookDetail> {
   const res = await fetch(`${API_BASE}/books/${encodeURIComponent(bookId)}`)
   if (!res.ok) throw new Error(`Failed to fetch book: ${res.status} ${res.statusText}`)
-  return res.json()
+  const book: BookDetail = await res.json()
+  return {
+    ...book,
+    cover_url: resolveResourceUrl(book.cover_url) || getCoverUrl(book.id),
+  }
 }
 
 /** Returns the URL to stream the PDF — validated by book ID on the server. */
