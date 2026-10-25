@@ -41,12 +41,20 @@ BOOKS_DIR = Path(__file__).parent / "data" / "books"
 COVERS_DIR = Path(__file__).parent / "data" / "covers"
 COVERS_DIR.mkdir(parents=True, exist_ok=True)
 
-ALLOWED_ORIGINS = [
+_DEFAULT_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:4173",
     "http://127.0.0.1:4173",
 ]
+
+_env_origins = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+ALLOWED_ORIGINS = list(dict.fromkeys(_DEFAULT_ORIGINS + _env_origins))
 
 # ---------------------------------------------------------------------------
 # Helpers
