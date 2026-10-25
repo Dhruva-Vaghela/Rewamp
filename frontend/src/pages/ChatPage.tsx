@@ -216,6 +216,69 @@ const GENERIC_QUESTIONS = [
   'What major turning point or crisis occurs in the narrative?',
 ]
 
+const CHAT_STORAGE_PREFIX = 'rewamp_chat_'
+const LAST_ACTIVE_BOOK_KEY = 'rewamp_last_active_book_id'
+
+function loadSavedMessages(bookId: string): ChatMessage[] {
+  if (!bookId) return []
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return []
+    const raw = window.sessionStorage.getItem(`${CHAT_STORAGE_PREFIX}${bookId}`)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) {
+      return parsed
+    }
+    return []
+  } catch (err) {
+    console.warn(`Failed to parse saved chat messages for ${bookId}:`, err)
+    return []
+  }
+}
+
+function saveMessages(bookId: string, messages: ChatMessage[]): void {
+  if (!bookId) return
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return
+    if (messages.length === 0) {
+      window.sessionStorage.removeItem(`${CHAT_STORAGE_PREFIX}${bookId}`)
+    } else {
+      window.sessionStorage.setItem(`${CHAT_STORAGE_PREFIX}${bookId}`, JSON.stringify(messages))
+    }
+  } catch (err) {
+    console.warn(`Failed to persist chat messages for ${bookId}:`, err)
+  }
+}
+
+function clearSavedMessages(bookId: string): void {
+  if (!bookId) return
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return
+    window.sessionStorage.removeItem(`${CHAT_STORAGE_PREFIX}${bookId}`)
+  } catch (err) {
+    console.warn(`Failed to remove saved chat messages for ${bookId}:`, err)
+  }
+}
+
+function saveLastActiveBookId(bookId: string): void {
+  if (!bookId) return
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return
+    window.sessionStorage.setItem(LAST_ACTIVE_BOOK_KEY, bookId)
+  } catch {
+    // Ignore quota or security errors
+  }
+}
+
+function getLastActiveBookId(): string | null {
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return null
+    return window.sessionStorage.getItem(LAST_ACTIVE_BOOK_KEY)
+  } catch {
+    return null
+  }
+}
+
 export default function ChatPage() {
   const { bookId } = useParams<{ bookId?: string }>()
   const navigate = useNavigate()
@@ -226,14 +289,24 @@ export default function ChatPage() {
   const [ingestStatus, setIngestStatus] = useState<string>('pending')
   const [isIngesting, setIsIngesting] = useState(false)
 
-  // Chat state
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  // Chat state - restored from sessionStorage for active book if available
+  const [messages, setMessages] = useState<ChatMessage[]>(() => (bookId ? loadSavedMessages(bookId) : []))
+  const [prevBookId, setPrevBookId] = useState(bookId)
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [topK] = useState(5)
 
   // Inspection & diagnostic state
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null)
+
+  // Avoid stale-state issues: ensure displayed messages match active bookId immediately
+  if (bookId !== prevBookId) {
+    setPrevBookId(bookId)
+    setMessages(bookId ? loadSavedMessages(bookId) : [])
+    setInput('')
+    setActiveCitation(null)
+    setIsSending(false)
+  }
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -249,29 +322,46 @@ export default function ChatPage() {
     scrollToBottom()
   }, [messages, isSending])
 
+  // Persist messages to sessionStorage whenever they update for the active book
+  useEffect(() => {
+    if (bookId && bookId === prevBookId) {
+      saveMessages(bookId, messages)
+    }
+  }, [bookId, messages, prevBookId])
+
+  // Track the last active book in sessionStorage
+  useEffect(() => {
+    if (bookId) {
+      saveLastActiveBookId(bookId)
+    }
+  }, [bookId])
+
   // Load all books for catalog dropdown / selection
   useEffect(() => {
     fetchBooks()
       .then((data) => {
         setAllBooks(data)
-        // If no bookId in URL, default to first ready book or first book
+        // If no bookId in URL, redirect to last active book if valid, or default to first ready book
         if (!bookId && data.length > 0) {
-          const readyBook = data.find((b) => b.ingest_status === 'ready') || data[0]
-          navigate(`/chat/${encodeURIComponent(readyBook.id)}`, { replace: true })
+          let targetBook: BookSummary | undefined
+          const lastActiveId = getLastActiveBookId()
+          if (lastActiveId) {
+            targetBook = data.find((b) => b.id === lastActiveId)
+          }
+          if (!targetBook) {
+            targetBook = data.find((b) => b.ingest_status === 'ready') || data[0]
+          }
+          if (targetBook) {
+            navigate(`/chat/${encodeURIComponent(targetBook.id)}`, { replace: true })
+          }
         }
       })
       .catch(console.error)
   }, [bookId, navigate])
 
-  // Load selected book details and auto-refresh chat state on bookId change
+  // Load selected book details on bookId change (does NOT reset chat messages)
   useEffect(() => {
     if (!bookId) return
-
-    // Auto-refresh chat workspace: clear old messages, input, and citation view
-    setMessages([])
-    setInput('')
-    setActiveCitation(null)
-    setIsSending(false)
 
     // Instantly preview book from allBooks if loaded to eliminate delay/flash
     if (allBooks.length > 0) {
@@ -391,6 +481,9 @@ export default function ChatPage() {
   const handleResetChat = () => {
     setMessages([])
     setActiveCitation(null)
+    if (bookId) {
+      clearSavedMessages(bookId)
+    }
   }
 
   const currentQuestions = useMemo(() => {
@@ -459,7 +552,6 @@ export default function ChatPage() {
                 onChange={(e) => {
                   const nextId = e.target.value
                   if (nextId && nextId !== bookId) {
-                    setMessages([])
                     setInput('')
                     setActiveCitation(null)
                     setIsSending(false)
